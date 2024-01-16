@@ -15,7 +15,7 @@ print(embeddings)
 
 loader = DirectoryLoader('data/', glob="**/*.pdf", show_progress=True, loader_cls=PyPDFLoader)
 documents = loader.load()
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=512, chunk_overlap=64)
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=2048, chunk_overlap=512)
 texts = text_splitter.split_documents(documents)
 
 
@@ -25,7 +25,7 @@ qdrant = Qdrant.from_documents(
     embeddings,
     url=url,
     prefer_grpc=False,
-    collection_name="vector_db1"
+    collection_name="db-2048"
 )
 
 print("Vector DB Successfully Created!")
