@@ -11,6 +11,7 @@ __pycache__/
 qdrant_storage
 chroma_db_oai
 data
+.files
 # Distribution / packaging
 .Python
 build/
