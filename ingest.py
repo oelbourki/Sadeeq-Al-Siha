@@ -18,6 +18,8 @@ documents = loader.load()
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=2048, chunk_overlap=512)
 texts = text_splitter.split_documents(documents)
 
+text_splitter1 = RecursiveCharacterTextSplitter(chunk_size=512, chunk_overlap=64)
+texts1 = text_splitter.split_documents(documents)
 
 url = "http://localhost:6333"
 qdrant = Qdrant.from_documents(
@@ -26,6 +28,14 @@ qdrant = Qdrant.from_documents(
     url=url,
     prefer_grpc=False,
     collection_name="db-2048"
+)
+
+qdrant = Qdrant.from_documents(
+    texts1,
+    embeddings,
+    url=url,
+    prefer_grpc=False,
+    collection_name="vector_db1"
 )
 
 print("Vector DB Successfully Created!")

@@ -1,0 +1,22 @@
+1 = slight chance of dozing
+2 = moderate chance of dozing
+3 = high chance of dozing
+Situation Chance of 
+dozing
+Sitting and reading _______________
+Watching TV _______________
+Sitting and inactive in a public place 
+(theatre or meeting) _______________
+As a passenger in a car for an hour 
+without a break _______________
+Lying down to rest in the afternoon 
+when circumstances permit _______________
+Sitting and talking to someone _______________
+Sitting quietly after lunch (without 
+alcohol) _______________
+In a car, while stopped for a few 
+minutes in the trafﬁc _______________
+TOTAL _______________
+Normal 5 ± 4
+Severe obstructive sleep apnoea 16 ( ±4)
+Narcolepsy 17Table 15.11  Epworth sleepiness scale

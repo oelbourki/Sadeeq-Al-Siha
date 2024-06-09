@@ -1,0 +1,9 @@
+chainlit
+langchain
+litellm
+qdrant-client
+ollama
+langchain-community
+sentence-transformers
+xmltodict
+pypdf

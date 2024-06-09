@@ -25,14 +25,17 @@ from langchain.embeddings import HuggingFaceEmbeddings, OpenAIEmbeddings
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import DocumentCompressorPipeline
 from langchain.retrievers.merger_retriever import MergerRetriever
-from langchain.vectorstores import Chroma
 from langchain.retrievers.web_research import WebResearchRetriever
 from langchain.utilities import GoogleSearchAPIWrapper
 from langchain.retrievers import PubMedRetriever
 litellm.set_verbose=True
 # chat = ChatLiteLLM(model="gpt-3.5-turbo")
 chat = ChatLiteLLM(
-    model="ollama/meditron-chat",
+    # model="ollama/meditron",
+    # model="ollama/openchat",
+    # model="koesn/llama3-openbiollm-8b",
+    model="monotykamary/medichat-llama3",
+    
     # model="ollama/meditron-normal",
     streaming=True,
     verbose=True,
@@ -42,7 +45,6 @@ chat = ChatLiteLLM(
     temperature=0.0
 )
 index_name = "langchain-demo"
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
 # embeddings = OpenAIEmbeddings()
 embeddings = SentenceTransformerEmbeddings(model_name="NeuML/pubmedbert-base-embeddings")
 
@@ -58,21 +60,10 @@ client = QdrantClient(
 
 db = Qdrant(client=client, embeddings=embeddings, collection_name="vector_db1")
 db1 = Qdrant(client=client, embeddings=embeddings, collection_name="db-2048")
-search = DuckDuckGoSearchRun()
-os.environ['GOOGLE_API_KEY'] = '83d8c79d30746834c392ff4a3607b38c4c98b354'
-os.environ['GOOGLE_CSE_ID'] = 'e0aa612f7131a4ea0'
 
-search = GoogleSearchAPIWrapper()
-retriever = db.as_retriever(search_type="mmr", search_kwargs={"k":3})
+retriever = db.as_retriever(search_kwargs={"k":3})
 retriever1 = db1.as_retriever(search_kwargs={"k":3})
-# Vectorstore
-vectorstore = Chroma(
-    embedding_function=embeddings, persist_directory="./chroma_db_oai"
-)
 
-web_research_retriever = WebResearchRetriever.from_llm(
-    vectorstore=vectorstore, llm=chat, search=search
-)
 pubmed = PubMedRetriever()
 lotr = MergerRetriever(retrievers=[ retriever, retriever1, pubmed])
 filter = EmbeddingsRedundantFilter(embeddings=embeddings)
@@ -90,7 +81,8 @@ compression_retriever_reordered = ContextualCompressionRetriever(
 )
 
 prompt_template1 = "Use the following pieces of context and chat history to answer the question at the end.\n" + "If you don't know the answer, just say that you don't know, " + "don't try to make up an answer.\n\n" + "{context}\n\nChat history: {chat_history}\n\nQuestion: {question}  \nHelpful Answer:"
-prompt_template = """Use the following pieces of information to answer the user's question.
+prompt_template = """You are a medical Chatbot
+Use the following pieces of information to answer the user's question.
 If you don't know the answer, just say that you don't know, don't try to make up an answer.
 
 Context: {context}
@@ -104,50 +96,35 @@ prompt = PromptTemplate(template=prompt_template, input_variables=['context', 'q
 
 @cl.on_chat_start
 async def start():
-    # await cl.Avatar(
-    #     name="Chatbot",
-    #     url="https://avatars.githubusercontent.com/u/128686189?s=400&u=a1d1553023f8ea0921fba0debbe92a8c5f840dd9&v=4",
-    # ).send()
-    # files = None
-    # while files is None:
-    #     files = await cl.AskFileMessage(
-    #         content=welcome_message,
-    #         accept=["text/plain", "application/pdf"],
-    #         max_size_mb=20,
-    #         timeout=180,
-    #         disable_human_feedback=True,
-    #     ).send()
-
-    # file = files[0]
-
-    # msg = cl.Message(
-    #     content=f"Processing `{file.name}`...", disable_human_feedback=True
-    # )
-    # await msg.send()
-
-    # # No async implementation in the Pinecone client, fallback to sync
-    # docsearch = await cl.make_async(get_docsearch)(file)
-    chain_type_kwargs = {"prompt": prompt}
+   chain_type_kwargs = {"prompt": prompt}
     message_history = ChatMessageHistory()
 
     memory = ConversationBufferMemory(
         memory_key="chat_history",
         output_key="answer",
         chat_memory=message_history,
+        # chat_memory=ConversationSummaryMemory(llm=chat)
         return_messages=True,
     )
-
+    memory = ConversationSummaryMemory.from_messages(
+        memory_key="chat_history",
+        output_key="answer",
+        
+        llm=chat,
+        chat_memory=message_history,
+        return_messages=True
+    )
     chain = ConversationalRetrievalChain.from_llm(
         # ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0, streaming=True),
         chat,
         chain_type="stuff",
-        retriever=compression_retriever,
+        # retriever=compression_retriever,
+        retriever=compression_retriever_reordered,
         memory=memory,
         return_source_documents=True,
         combine_docs_chain_kwargs=chain_type_kwargs,
         rephrase_question= False
     )
-
     # Let the user know that the system is ready
     # msg.content = f"`{file.name}` processed. You can now ask questions!"
     # await msg.update()
