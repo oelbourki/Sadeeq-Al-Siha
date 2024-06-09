@@ -4,7 +4,7 @@ from qdrant_client import QdrantClient
 
 embeddings = SentenceTransformerEmbeddings(model_name="NeuML/pubmedbert-base-embeddings")
 
-url = "http://localhost:6333"
+url = "http://qdrant:6333"
 
 client = QdrantClient(
     url=url, prefer_grpc=False

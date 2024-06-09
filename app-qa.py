@@ -21,6 +21,7 @@ from langchain.document_transformers import (
     EmbeddingsClusteringFilter,
     EmbeddingsRedundantFilter,
 )
+from langchain.memory import ConversationSummaryMemory
 from langchain.embeddings import HuggingFaceEmbeddings, OpenAIEmbeddings
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import DocumentCompressorPipeline
@@ -32,16 +33,16 @@ litellm.set_verbose=True
 # chat = ChatLiteLLM(model="gpt-3.5-turbo")
 chat = ChatLiteLLM(
     # model="ollama/meditron",
-    # model="ollama/openchat",
+    model="ollama/openchat",
     # model="koesn/llama3-openbiollm-8b",
-    model="monotykamary/medichat-llama3",
+    # model="monotykamary/medichat-llama3",
     
     # model="ollama/meditron-normal",
     streaming=True,
     verbose=True,
     callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]),
-        api_base="http://localhost:11434",
-    max_tokens=256,
+        api_base="http://ollama:11434",
+    max_tokens=1024,
     temperature=0.0
 )
 index_name = "langchain-demo"
@@ -52,7 +53,7 @@ namespaces = set()
 
 from qdrant_client import QdrantClient
 from langchain.vectorstores import Qdrant
-url = "http://localhost:6333"
+url = "http://qdrant:6333"
 
 client = QdrantClient(
     url=url, prefer_grpc=False
@@ -96,16 +97,16 @@ prompt = PromptTemplate(template=prompt_template, input_variables=['context', 'q
 
 @cl.on_chat_start
 async def start():
-   chain_type_kwargs = {"prompt": prompt}
+    chain_type_kwargs = {"prompt": prompt}
     message_history = ChatMessageHistory()
 
-    memory = ConversationBufferMemory(
-        memory_key="chat_history",
-        output_key="answer",
-        chat_memory=message_history,
-        # chat_memory=ConversationSummaryMemory(llm=chat)
-        return_messages=True,
-    )
+    # memory = ConversationBufferMemory(
+    #     memory_key="chat_history",
+    #     output_key="answer",
+    #     chat_memory=message_history,
+    #     # chat_memory=ConversationSummaryMemory(llm=chat)
+    #     return_messages=True,
+    # )
     memory = ConversationSummaryMemory.from_messages(
         memory_key="chat_history",
         output_key="answer",
@@ -136,7 +137,8 @@ async def start():
 async def main(message: cl.Message):
     chain = cl.user_session.get("chain")  # type: ConversationalRetrievalChain
     cb = cl.AsyncLangchainCallbackHandler()
-    res = await chain.acall(message.content, callbacks=[cb])
+    # res = await chain.acall(message.content, callbacks=[cb])
+    res = chain(message.content, callbacks=[cb])
     answer = res["answer"]
     source_documents = res["source_documents"]  # type: List[Document]
 

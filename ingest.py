@@ -21,7 +21,7 @@ texts = text_splitter.split_documents(documents)
 text_splitter1 = RecursiveCharacterTextSplitter(chunk_size=512, chunk_overlap=64)
 texts1 = text_splitter.split_documents(documents)
 
-url = "http://localhost:6333"
+url = "http://qdrant:6333"
 qdrant = Qdrant.from_documents(
     texts,
     embeddings,
